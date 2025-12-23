@@ -4,7 +4,7 @@ EcoShower is a cloud-native IoT solution designed to track, manage, and optimize
 
 ---
 
-## 👥 Team
+## Team
 
 - **Nevo Iflah**
 - **Liel Yardeni**
@@ -14,7 +14,7 @@ EcoShower is a cloud-native IoT solution designed to track, manage, and optimize
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 EcoShower/
@@ -40,7 +40,7 @@ EcoShower/
 
 ---
 
-## 🏗️ Architecture & Technologies
+## Architecture & Technologies
 
 The system is built on **AWS Serverless** architecture for scalability and low maintenance.
 
@@ -56,14 +56,14 @@ The system is built on **AWS Serverless** architecture for scalability and low m
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 ### For Users
 *   **Remote Control**: Pre-heat your shower to exact temperature from the app.
 *   **Smart Alerts**: Get notified via Email when the water is ready.
 *   **Savings Tracking**: View how much water and money you saved per session.
 *   **Usage History**: Detailed logs of every shower session.
-*   **Custom Settings**: Set water price, temperature units (°C/°F), and language (EN/HE).
+*   **Custom Settings**: Set water price, temperature units (Celsius/Fahrenheit), and language (EN/HE).
 
 ### For Admins
 *   **System Dashboard**: View global stats (Active Users, Total Liters Saved).
@@ -72,7 +72,7 @@ The system is built on **AWS Serverless** architecture for scalability and low m
 
 ---
 
-## 🛠️ Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
 *   Node.js 18+
@@ -92,7 +92,7 @@ The system is built on **AWS Serverless** architecture for scalability and low m
 
 ---
 
-## 📜 License & Credits
+## License & Credits
 
 Final Project 2025 - Ruppin Academic Center.
 Developed as part of the "Cloud Application Development" course.
