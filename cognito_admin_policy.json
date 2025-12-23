@@ -1,0 +1,17 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cognito-idp:AdminUpdateUserAttributes",
+                "cognito-idp:AdminAddUserToGroup",
+                "cognito-idp:AdminRemoveUserFromGroup",
+                "cognito-idp:AdminDeleteUser",
+                "cognito-idp:AdminGetUser",
+                "cognito-idp:ListUsers"
+            ],
+            "Resource": "arn:aws:cognito-idp:eu-north-1:379507013795:userpool/eu-north-1_q1X9yXVs5"
+        }
+    ]
+}

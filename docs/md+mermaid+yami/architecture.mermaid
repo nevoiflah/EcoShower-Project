@@ -1,0 +1,66 @@
+
+graph TD
+    subgraph Client [Client Side]
+        Web[React Web App]
+        Mobile[Mobile Responsiveness]
+        Admin[Admin Dashboard]
+    end
+
+    subgraph AWS [AWS Cloud Infrastructure]
+        %% Frontend Hosting
+        S3[S3 Bucket<br/>(Frontend Host)]
+        CF[CloudFront<br/>(CDN)]
+        
+        %% Auth
+        Cognito[Cognito User Pool]
+        
+        %% API Layer
+        API[API Gateway<br/>(HTTP API)]
+        
+        %% Compute
+        LambdaAPI[Lambda: API Handler<br/>(Python 3.11)]
+        LambdaIoT[Lambda: Process Telemetry<br/>(Python 3.11)]
+        
+        %% Database
+        subgraph DB [DynamoDB Tables]
+            T_Users[EcoShower-Users]
+            T_Devices[EcoShower-Devices]
+            T_Sessions[EcoShower-Sessions]
+            T_Telem[EcoShower-Telemetry]
+        end
+        
+        %% IoT & Messaging
+        IoT[AWS IoT Core<br/>(MQTT Broker)]
+        SNS[SNS<br/>(Private Topics)]
+    end
+
+    subgraph HW [Hardware]
+        ESP32[ESP32 Controller<br/>(Sensors + Valve)]
+    end
+
+    %% Flows
+    Web -->|HTTPS| CF
+    CF --> S3
+    
+    Web -->|Auth| Cognito
+    Web -->|REST| API
+    
+    API -->|Proxy| LambdaAPI
+    
+    LambdaAPI -->|Read/Write| T_Users
+    LambdaAPI -->|Read/Write| T_Devices
+    LambdaAPI -->|Read/Write| T_Sessions
+    
+    LambdaAPI -->|Publish Command| IoT
+    
+    IoT <-->|MQTT (ecoshower/{id}/...)| ESP32
+    
+    IoT -->|Rule| LambdaIoT
+    LambdaIoT -->|Write| T_Telem
+    LambdaIoT -->|Read| T_Users
+    LambdaIoT -->|Update Status| T_Devices
+    
+    LambdaIoT -->|Alert| SNS
+    LambdaAPI -->|Alert (Manual)| SNS
+    
+    SNS -->|Email| Web

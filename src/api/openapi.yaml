@@ -1,0 +1,636 @@
+openapi: 3.0.3
+info:
+  title: EcoShower API
+  description: |
+    REST API for EcoShower - Smart Water Conservation System
+    
+    ## Authentication
+    All endpoints (except /auth/*) require a valid JWT token in the Authorization header:
+    ```
+    Authorization: Bearer <token>
+    ```
+    
+    ## Rate Limits
+    - 100 requests per minute per user
+    - 1000 requests per minute per IP
+    
+  version: 1.0.0
+  contact:
+    name: EcoShower Support
+    email: support@ecoshower.com
+
+servers:
+  - url: https://api.ecoshower.com/v1
+    description: Production server
+  - url: https://api-dev.ecoshower.com/v1
+    description: Development server
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Users
+    description: User management
+  - name: Devices
+    description: Device management
+  - name: Dashboard
+    description: Dashboard and statistics
+  - name: Admin
+    description: Admin-only endpoints
+
+paths:
+  # ============ AUTH ============
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register new user
+      description: Create a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 8
+                  example: SecurePass123!
+                name:
+                  type: string
+                  example: נבו יפלח
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User created. Please verify your email.
+                  user_id:
+                    type: string
+                    example: 550e8400-e29b-41d4-a716-446655440000
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already exists
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: User login
+      description: Authenticate user and receive JWT tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  expires_in:
+                    type: integer
+                    example: 3600
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: New tokens issued
+        '401':
+          description: Invalid refresh token
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logged out successfully
+
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Reset email sent (if user exists)
+
+  # ============ USERS ============
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+    put:
+      tags: [Users]
+      summary: Update current user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                notification_preferences:
+                  type: object
+      responses:
+        '200':
+          description: Profile updated
+
+  # ============ DEVICES ============
+  /devices:
+    get:
+      tags: [Devices]
+      summary: List user's devices
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Device'
+    post:
+      tags: [Devices]
+      summary: Add new device
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, device_code]
+              properties:
+                name:
+                  type: string
+                  example: מקלחת ראשית
+                device_code:
+                  type: string
+                  pattern: '^[A-Z0-9]{12}$'
+                  example: ABC123XYZ789
+                target_temp:
+                  type: number
+                  minimum: 30
+                  maximum: 45
+                  default: 38
+      responses:
+        '201':
+          description: Device added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device:
+                    $ref: '#/components/schemas/Device'
+        '400':
+          description: Invalid device code
+
+  /devices/{device_id}:
+    parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Devices]
+      summary: Get device details
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Device details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device:
+                    $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+    put:
+      tags: [Devices]
+      summary: Update device settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                target_temp:
+                  type: number
+                  minimum: 30
+                  maximum: 45
+      responses:
+        '200':
+          description: Device updated
+    delete:
+      tags: [Devices]
+      summary: Delete device
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Device deleted
+
+  /devices/{device_id}/start:
+    parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags: [Devices]
+      summary: Start shower session
+      description: Begin water heating and monitoring
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target_temp:
+                  type: number
+                  minimum: 30
+                  maximum: 45
+                profile:
+                  type: string
+                  example: default
+      responses:
+        '201':
+          description: Session started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session:
+                    $ref: '#/components/schemas/Session'
+        '400':
+          description: Device offline or already in use
+
+  /devices/{device_id}/command:
+    parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags: [Devices]
+      summary: Send command to device
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [command]
+              properties:
+                command:
+                  type: string
+                  enum: [START_HEATING, STOP_HEATING, OPEN_VALVE, CLOSE_VALVE]
+      responses:
+        '200':
+          description: Command sent
+
+  # ============ DASHBOARD ============
+  /dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: Get dashboard summary
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [week, month, year]
+            default: month
+      responses:
+        '200':
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_water_saved:
+                    type: number
+                    example: 1234.5
+                  total_money_saved:
+                    type: number
+                    example: 9.87
+                  sessions_count:
+                    type: integer
+                    example: 47
+                  avg_per_session:
+                    type: number
+                    example: 26.3
+                  period:
+                    type: string
+
+  /dashboard/history:
+    get:
+      tags: [Dashboard]
+      summary: Get session history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Session history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Session'
+
+  /dashboard/realtime/{device_id}:
+    parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Dashboard]
+      summary: Get real-time device data
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Real-time telemetry
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device:
+                    $ref: '#/components/schemas/Device'
+                  telemetry:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Telemetry'
+
+  # ============ ADMIN ============
+  /admin/stats:
+    get:
+      tags: [Admin]
+      summary: Get system statistics
+      description: Admin only endpoint
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: System stats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users_count:
+                    type: integer
+                  devices_count:
+                    type: integer
+                  devices_online:
+                    type: integer
+                  total_water_saved_month:
+                    type: number
+        '403':
+          description: Admin access required
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List all users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+
+  /admin/devices:
+    get:
+      tags: [Admin]
+      summary: List all devices
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All devices
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        created_at:
+          type: string
+          format: date-time
+
+    Device:
+      type: object
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        device_code:
+          type: string
+        target_temp:
+          type: number
+        current_temp:
+          type: number
+        status:
+          type: string
+          enum: [online, offline, heating, ready]
+        last_seen:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    Session:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        device_id:
+          type: string
+          format: uuid
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        target_temp:
+          type: number
+        water_saved:
+          type: number
+        money_saved:
+          type: number
+        status:
+          type: string
+          enum: [active, completed, cancelled]
+
+    Telemetry:
+      type: object
+      properties:
+        device_id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        temperature:
+          type: number
+        status:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: object

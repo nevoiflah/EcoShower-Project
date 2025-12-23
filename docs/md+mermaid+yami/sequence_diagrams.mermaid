@@ -1,0 +1,55 @@
+
+sequenceDiagram
+    participant User
+    participant UI as Frontend
+    participant API as API Gateway
+    participant Lambda as API Handler
+    participant DB as DynamoDB
+    participant IoT as IoT Core
+    participant Device as ESP32
+    participant SNS as Private SNS
+
+    Note over User, UI: FLOW 1: PRE-HEATING (Remote Control)
+
+    User->>UI: Select Temp (38°C) & Time (15m)
+    User->>UI: Click "Start Heating"
+    UI->>API: POST /devices/{id}/command (START_HEATING)
+    API->>Lambda: Invoke
+    Lambda->>DB: Update Device (Target Temp)
+    Lambda->>IoT: Publish 'START_HEATING'
+    IoT->>Device: MQTT Command
+    Device-->>IoT: Ack
+    Lambda-->>UI: 200 OK
+    UI->>User: Show "Heating..." status
+
+    Note over Device, SNS: FLOW 2: WATER READY ALERT (Async)
+
+    Device->>IoT: Telemetry {temp: 38.0, status: heating}
+    IoT->>Lambda: Rule Trigger (ProcessTelemetry)
+    Lambda->>DB: Read Device & User Profile
+    
+    rect rgb(200, 255, 200)
+    Note right of Lambda: Logic: Temp >= Target?
+    Lambda->>DB: Update Status = 'ready'
+    Lambda->>SNS: Publish to 'EcoShower-User-{id}'
+    end
+    
+    SNS-->>User: Email Notification "Your water is ready!"
+
+    Note over User, UI: FLOW 3: SHOWER SESSION (On Site)
+
+    User->>UI: Click "Start Shower"
+    UI->>API: POST /devices/{id}/start
+    API->>Lambda: Invoke
+    Lambda->>DB: Create Session (Active)
+    Lambda->>IoT: Publish 'OPEN_VALVE'
+    Lambda-->>UI: 210 Created {session_id}
+    UI->>User: Show Shower Timer
+
+    User->>UI: Click "End Shower"
+    UI->>API: POST /devices/{id}/stop
+    API->>Lambda: Invoke
+    Lambda->>DB: Close Session & Calculate Stats
+    Lambda->>IoT: Publish 'CLOSE_VALVE'
+    Lambda-->>UI: 200 OK {water_saved: 45L}
+    UI->>User: Show "You saved 45 Liters!"

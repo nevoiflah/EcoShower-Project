@@ -1,0 +1,347 @@
+openapi: 3.0.0
+info:
+  title: EcoShower API
+  description: API for the EcoShower Smart Shower System using AWS Serverless (Lambda, DynamoDB, IoT Core).
+  version: 2.4.0
+servers:
+  - url: https://api.ecoshower.com/prod
+    description: Production Server (Eu-North-1)
+
+components:
+  securitySchemes:
+    CognitoAuth:
+      type: apiKey
+      name: Authorization
+      in: header
+      description: AWS Cognito ID Token
+  schemas:
+    Device:
+      type: object
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+        name:
+          type: string
+          example: "Master Bathroom"
+        device_code:
+          type: string
+          example: "A1B2C3D4E5F6"
+        status:
+          type: string
+          enum: [ready, heating, showering, offline]
+        target_temp:
+          type: number
+          example: 38.5
+        current_temp:
+          type: number
+          example: 22.0
+    Session:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [active, completed]
+        start_time:
+          type: string
+          format: date-time
+        water_saved:
+          type: number
+          description: Liters
+        money_saved:
+          type: number
+          description: NIS
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        notifications:
+          type: object
+          properties:
+            water_ready_alert:
+              type: boolean
+        system:
+          type: object
+          properties:
+            temperature_unit:
+              type: string
+              enum: [celsius, fahrenheit]
+            language:
+              type: string
+              enum: [he, en]
+
+security:
+  - CognitoAuth: []
+
+paths:
+  /devices:
+    get:
+      summary: List User Devices
+      operationId: listDevices
+      responses:
+        '200':
+          description: List of user's devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Device'
+    post:
+      summary: Add New Device
+      operationId: addDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, device_code]
+              properties:
+                name:
+                  type: string
+                device_code:
+                  type: string
+                  minLength: 12
+                  maxLength: 12
+      responses:
+        '210':
+          description: Device successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device:
+                    $ref: '#/components/schemas/Device'
+
+  /devices/{device_id}:
+    parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get Device Details
+      responses:
+        '200':
+          description: Device details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device:
+                    $ref: '#/components/schemas/Device'
+    put:
+      summary: Update Device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                target_temp:
+                  type: number
+                  minimum: 30
+                  maximum: 45
+      responses:
+        '200':
+          description: Device updated
+
+  /devices/{device_id}/start:
+    post:
+      summary: Start Shower Session
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target_temp:
+                  type: number
+                duration:
+                  type: integer
+                  description: Planned duration in minutes
+      responses:
+        '210':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session:
+                    $ref: '#/components/schemas/Session'
+  
+  /devices/{device_id}/stop:
+    post:
+      summary: Stop Shower Session
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                duration:
+                  type: number
+                  description: Actual duration in seconds
+      responses:
+        '200':
+          description: Session stopped and stats calculated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  water_saved:
+                    type: number
+                  money_saved:
+                    type: number
+                  duration_seconds:
+                    type: number
+
+  /devices/{device_id}/command:
+    post:
+      summary: Send IoT Command
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [command]
+              properties:
+                command:
+                  type: string
+                  enum: [START_HEATING, STOP_HEATING, OPEN_VALVE, CLOSE_VALVE]
+      responses:
+        '200':
+          description: Command sent via MQTT
+
+  /settings:
+    get:
+      summary: Get User Settings
+      responses:
+        '200':
+          description: User profile and settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  settings:
+                    $ref: '#/components/schemas/User'
+    put:
+      summary: Update User Settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                notifications:
+                  type: object
+                  properties:
+                    water_ready_alert:
+                      type: boolean
+                system:
+                  type: object
+                  properties:
+                    temperature_unit:
+                      type: string
+                    language:
+                      type: string
+      responses:
+        '200':
+          description: Settings updated
+
+  /dashboard/summary:
+    get:
+      summary: Get User Usage Stats
+      responses:
+        '200':
+          description: Monthly aggregation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_water_saved:
+                    type: number
+                  total_money_saved:
+                    type: number
+                  sessions_count:
+                    type: integer
+
+  /admin/stats:
+    get:
+      summary: Get System Wide Stats (Admin)
+      responses:
+        '200':
+          description: Global system statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_users:
+                    type: integer
+                  total_devices:
+                    type: integer
+                  activity_data:
+                    type: array
+
+  /admin/users:
+    get:
+      summary: List All Users (Admin)
+      responses:
+        '200':
+          description: List of all users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
