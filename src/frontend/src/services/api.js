@@ -4,12 +4,13 @@
  */
 
 import { CognitoUserPool } from 'amazon-cognito-identity-js';
+import { config } from '../config';
 
-const API_BASE_URL = 'https://sk6vjwnic8.execute-api.eu-north-1.amazonaws.com/prod';
+const API_BASE_URL = config.API_URL;
 
 const poolData = {
-  UserPoolId: 'eu-north-1_q1X9yXVs5',
-  ClientId: '5p4q4tvm8k8q2jr8pr9mmk8un9'
+  UserPoolId: config.COGNITO_USER_POOL_ID,
+  ClientId: config.COGNITO_CLIENT_ID
 };
 
 const userPool = new CognitoUserPool(poolData);
