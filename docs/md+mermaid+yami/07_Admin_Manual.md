@@ -1,53 +1,53 @@
-# EcoShower Admin Guide
+# מדריך למנהל מערכת - EcoShower
 
-## Overview
-The **Admin Panel** provides centralized management for the EcoShower system. It allows administrators to view system-wide statistics, manage users, and monitor device activity.
+## סקירה כללית
+**פאנל הניהול** מספק ניהול מרכזי למערכת EcoShower. הוא מאפשר למנהלים לצפות בסטטיסטיקות של כל המערכת, לנהל משתמשים ולנטר פעילות מכשירים.
 
-**Prerequisite**: You must be logged in with an account that has the `admin` role.
+**דרישת קדם**: עליכם להיות מחוברים עם חשבון בעל הרשאת `admin`.
 
-## Accessing the Panel
-1.  Log in to the application.
-2.  If you are an admin, a **"Admin Dashboard"** link (Shield icon) will appear in the navigation.
-3.  Click it to enter the admin area.
+## גישה לפאנל
+1.  התחברו לאפליקציה.
+2.  אם אתם מנהלים, קישור **"Admin Dashboard"** (אייקון מגן) יופיע בניווט.
+3.  לחצו עליו כדי להיכנס לאזור הניהול.
 
-## Dashboard Stats
-The top section displays real-time system totals:
-*   **Users**: Total registered accounts.
-*   **Devices**: Total smart devices registered.
-*   **Showers**: Total completed shower sessions across all users.
-*   **Liters Used**: Total water consumption tracked by the system.
+## סטטיסטיקות דשבורד
+החלק העליון מציג נתונים בזמן אמת של המערכת:
+*   **משתמשים**: סה״כ חשבונות רשומים.
+*   **מכשירים**: סה״כ מכשירים חכמים רשומים.
+*   **מקלחות**: סה״כ מפגשי מקלחת שהושלמו אצל כל המשתמשים.
+*   **ליטרים שנצרכו**: סה״כ צריכת מים שתועדה במערכת.
 
-## Activity Chart
-*   **"All Time Activity"**: A line chart showing daily trends.
-    *   **Green Line**: Number of Showers.
-    *   **Blue Line**: Water Used (Liters).
-*   Hover over points to see exact numbers for a specific date.
+## גרף פעילות
+*   **"פעילות כל הזמן"**: גרף קו המציג מגמות יומיות.
+    *   **קו ירוק**: מספר מקלחות.
+    *   **קו כחול**: שימוש במים (ליטרים).
+*   רחפו מעל הנקודות כדי לראות מספרים מדויקים לתאריך ספציפי.
 
-## User Management
-The **Users Table** lists all registered accounts.
+## ניהול משתמשים
+**טבלת המשתמשים** מציגה את כל החשבונות הרשומים.
 
-### Columns
-*   **Name**: User's display name.
-*   **Email**: Registered email address.
-*   **Role**: `Admin` (Purple) or `User` (Gray).
-*   **Devices**: Count of devices owned.
-*   **Showers**: Count of sessions completed.
-*   **Actions**: Controls for managing the user.
+### עמודות
+*   **שם**: שם התצוגה של המשתמש.
+*   **אימייל**: כתובת האימייל הרשומה.
+*   **תפקיד**: `Admin` (סגול) או `User` (אפור).
+*   **מכשירים**: מספר המכשירים בבעלות המשתמש.
+*   **מקלחות**: מספר המפגשים שהושלמו.
+*   **פעולות**: כפתורי שליטה לניהול המשתמש.
 
-### Actions
-1.  **Promote/Demote**:
-    *   Click the **Blue Shield** icon to **Promote** a User to Admin.
-    *   Click the **Orange Shield** icon to **Demote** an Admin to User.
-    *   *Note*: This updates their permissions immediately.
-3.  **Filter Stats (Show Data)**:
-    *   Click the **"Show Data"** button in any user row.
-    *   The Dashboard Stats and Activity Chart will update to show **only** that user's activity.
-    *   To clear the filter, click the **"Clear Filter"** button at the top of the page.
-4.  **Delete User**:
-    *   Click the **Red Trash** icon.
-    *   Confirm the dialog ("Are you sure you want to delete...?").
-    *   *Warning*: This permanently removes the user, their devices, and history from the database and Cognito.
+### פעולות
+1.  **קידום/הורדה בדרגה**:
+    *   לחצו על אייקון **המגן הכחול** כדי **לקדם** משתמש ל-Admin.
+    *   לחצו על אייקון **המגן הכתום** כדי **להוריד** Admin ל-User.
+    *   *הערה*: פעולה זו מעדכנת את ההרשאות שלהם באופן מיידי.
+2.  **סינון סטטיסטיקות (Show Data)**:
+    *   לחצו על כפתור **"Show Data"** בשורה של משתמש כלשהו.
+    *   סטטיסטיקות הדשבורד וגרף הפעילות יתעדכנו להציג **רק** את הפעילות של אותו משתמש.
+    *   כדי לנקות את הסינון, לחצו על כפתור **"Clear Filter"** בראש העמוד.
+3.  **מחיקת משתמש**:
+    *   לחצו על אייקון **הפח האדום**.
+    *   אשרו את הדיאלוג ("Are you sure you want to delete...?").
+    *   *אזהרה*: פעולה זו מסירה לצמיתות את המשתמש, המכשירים שלו וההיסטוריה שלו ממסד הנתונים ומ-Cognito.
 
-## Troubleshooting
-*   **Data Not Loading?**: Click the **Refresh** icon in the top right corner.
-*   **Role Not Updating?**: Ensure the backend Lambda functions (`EcoShower-API`) have the correct IAM permissions for Cognito.
+## פתרון תקלות
+*   **נתונים לא נטענים?**: לחצו על אייקון **הרענון** בפינה הימנית/שמאלית העליונה.
+*   **תפקיד לא מתעדכן?**: וודאו שלפונקציות ה-Lambda ב-Backend (`EcoShower-API`) יש את הרשאות ה-IAM המתאימות ל-Cognito.

@@ -1,67 +1,67 @@
-# EcoShower User Manual
+# מדריך למשתמש - EcoShower
 
-## Introduction
-Welcome to **EcoShower**, the smart shower system that helps you save water, energy, and money. This guide covers how to use the web application to control your smart shower device.
+## מבוא
+ברוכים הבאים ל-**EcoShower**, מערכת המקלחת החכמה שעוזרת לכם לחסוך במים, אנרגיה וכסף. מדריך זה מכסה את אופן השימוש באפליקציית האינטרנט לשליטה במכשיר המקלחת החכם שלכם.
 
-## Getting Started
+## צעדים ראשונים
 
-### 1. Registration
-1.  Open the EcoShower App.
-2.  Click **"Don't have an account? Sign up"**.
-3.  Enter your **Name**, **Email**, and **Password**.
-    *   *Note: Password must contain uppercase, lowercase, number, and special character.*
-4.  Enter the 6-digit verification code sent to your email.
-5.  You will be automatically logged in.
+### 1. הרשמה
+1.  פתחו את אפליקציית EcoShower.
+2.  לחצו על **"Don't have an account? Sign up"**.
+3.  הזינו את **השם**, **האימייל** ו**הסיסמה** שלכם.
+    *   *הערה: הסיסמה חייבת לכלול אות גדולה, אות קטנה, מספר ותו מיוחד.*
+4.  הזינו את קוד האימות בן 6 הספרות שנשלח לאימייל שלכם.
+5.  תחוברו אוטומטית למערכת.
 
-### 2. Adding a Device
-1.  Navigate to the **Devices** tab (Shower Icon).
-2.  Click the **+ (Plus)** button to open the "Add Device" modal.
-3.  Enter a **Device Name** (e.g., "Master Bath").
-4.  Enter the **Device Code** (12-character ID found on your hardware).
-5.  Click **"Add"**. The device will appear in your list.
+### 2. הוספת מכשיר
+1.  נווטו ללשונית **מכשירים** (אייקון מקלחת).
+2.  לחצו על כפתור ה-**+ (פלוס)** כדי לפתוח את חלונית "הוספת מכשיר".
+3.  הזינו **שם למכשיר** (לדוגמה, "מקלחת הורים").
+4.  הזינו את **קוד המכשיר** (מזהה בן 12 תווים המופיע על החומרה שלכם).
+5.  לחצו על **"Add"**. המכשיר יופיע ברשימה שלכם.
 
-## Using the Smart Shower
+## שימוש במקלחת החכמה
 
-### Step 1: Pre-Heating (Remote Config)
-1.  Click on your device card in the list to open the **Control Panel**.
-2.  Adjust the **Temperature** slider (30°C - 45°C).
-3.  Adjust the **Duration** slider (1-30 minutes).
-4.  Click the orange **"Start Heating"** button.
-    *   The status will change to "Heating...".
-    *   *Simulation Note*: 1 minute of planned time = 1 second of mock heating wait time.
-5.  Wait for the notification.
+### שלב 1: חימום מראש (שליטה מרחוק)
+1.  לחצו על כרטיס המכשיר ברשימה כדי לפתוח את **לוח הבקרה**.
+2.  כוונו את המחוון של **הטמפרטורה** (30°C - 45°C).
+3.  כוונו את המחוון של **משך הזמן** (1-30 דקות).
+4.  לחצו על הכפתור הכתום **"Start Heating"**.
+    *   הסטטוס ישתנה ל-"Heating...".
+    *   *הערת סימולציה*: דקה אחת של זמן מתוכנן = שנייה אחת של זמן המתנה בסימולציה.
+5.  המתינו להתראה.
 
-### Step 2: Water Ready
-*   When the target temperature is reached:
-    *   You will receive an **Email Notification** (subject: "EcoShower - Water Ready!").
-        *   *Note: Ensure "Water Ready Alert" is enabled in Settings.*
-    *   The app status will change to **"Ready!"** (Green).
+### שלב 2: המים מוכנים
+*   כאשר טמפרטורת היעד מושגת:
+    *   תקבלו **התראת אימייל** (נושא: "EcoShower - Water Ready!").
+        *   *הערה: וודאו ש-"Water Ready Alert" מופעל בהגדרות.*
+    *   סטטוס האפליקציה ישתנה ל-**"Ready!"** (ירוק).
 
-### Step 3: Showering
-1.  Enter the shower.
-2.  Click the blue **"Start Shower"** button.
-    *   The valve opens.
-    *   The app shows a live timer and "Shower in progress...".
-3.  When finished, click **"End Shower"**.
-    *   The valve closes.
-    *   You will see a summary of your session (Water & Money Saved).
+### שלב 3: מקלחת
+1.  היכנסו למקלחת.
+2.  לחצו על הכפתור הכחול **"Start Shower"**.
+    *   השסתום נפתח.
+    *   האפליקציה מציגה טיימר חי ו-"Shower in progress...".
+3.  כשתסיימו, לחצו על **"End Shower"**.
+    *   השסתום נסגר.
+    *   תראו סיכום של המפגש שלכם (מים וכסף שנחסכו / עלות).
 
-## Dashboard & History
-*   **Dashboard**: Shows your activity summary.
-    *   **Filters**: Use the toggle buttons at the top to switch the view between:
-        *   **Last 7/30 Days**: Shows daily breakdown bars.
-        *   **All Time**: Shows monthly consolidated bars for long-term trends.
-    *   **Cards**: Displays "Today Usage", "Total Cost", "Total Usage", and "Total Showers".
-*   **History**: Shows a list of all your past sessions with details (Date, Duration, Cost).
+## דשבורד והיסטוריה
+*   **דשבורד**: מציג סיכום פעילות.
+    *   **מסננים**: השתמשו בכפתורי המעבר בראש העמוד כדי לשנות את התצוגה בין:
+        *   **7/30 ימים אחרונים**: מציג גרף עמודות יומי.
+        *   **כל הזמן (All Time)**: מציג גרף עמודות חודשי למגמות ארוכות טווח.
+    *   **כרטיסים**: מציג "צריכה יומית", "עלות כוללת", "צריכה כוללת" ו"סה״כ מקלחות".
+*   **היסטוריה**: מציגה רשימה של כל המפגשים הקודמים עם פרטים (תאריך, משך זמן, עלות).
 
-## Settings
-Navigate to the **Settings** tab (Gear Icon) to customize your experience:
+## הגדרות
+נווטו ללשונית **הגדרות** (אייקון גלגל שיניים) כדי להתאים אישית את החוויה:
 
-1.  **Profile**: Update your Display Name.
-2.  **Notifications**:
-    *   **Water Ready Alert**: Toggle ON/OFF to control email notifications.
-3.  **System**:
-    *   **Temperature Unit**: Switch between Celsius (°C) and Fahrenheit (°F).
-    *   **Water Price**: Set your local water cost (default: 0.008 NIS/Liter).
-    *   **Language**: Switch between English (EN) and Hebrew (HE).
-4.  **Save**: Click **"Save All Settings"** to apply changes.
+1.  **פרופיל**: עדכון שם התצוגה.
+2.  **התראות**:
+    *   **Water Ready Alert**: הפעלה/כיבוי של התראות אימייל כאשר המים חמים.
+3.  **מערכת**:
+    *   **יחידת טמפרטורה**: מעבר בין צלזיוס (°C) לפרנהייט (°F).
+    *   **מחיר מים**: הגדרת עלות המים המקומית (ברירת מחדל: 0.008 ש״ח/ליטר).
+    *   **שפה**: מעבר בין אנגלית (EN) לעברית (HE).
+4.  **שמירה**: לחצו על **"Save All Settings"** להחלת השינויים.
