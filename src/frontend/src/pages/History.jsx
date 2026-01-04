@@ -172,7 +172,7 @@ function History() {
         <div className="bg-green-50 rounded-xl p-3 text-center">
           <DollarSign className="w-5 h-5 text-green-500 mx-auto mb-1" />
           <p className="text-lg font-bold">₪{totals.cost.toFixed(2)}</p>
-          <p className="text-xs text-gray-500">{isRTL ? 'נחסכו' : 'Saved'}</p>
+          <p className="text-xs text-gray-500">{isRTL ? 'עלות' : 'Cost'}</p>
         </div>
       </div>
 

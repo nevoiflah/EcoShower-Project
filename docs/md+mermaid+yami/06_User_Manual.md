@@ -47,8 +47,12 @@ Welcome to **EcoShower**, the smart shower system that helps you save water, ene
     *   You will see a summary of your session (Water & Money Saved).
 
 ## Dashboard & History
-*   **Dashboard**: Shows your monthly summary (Total Liters, Money Saved, Session Count).
-*   **History**: Shows a list of all your past sessions with details (Date, Duration, Savings).
+*   **Dashboard**: Shows your activity summary.
+    *   **Filters**: Use the toggle buttons at the top to switch the view between:
+        *   **Last 7/30 Days**: Shows daily breakdown bars.
+        *   **All Time**: Shows monthly consolidated bars for long-term trends.
+    *   **Cards**: Displays "Today Usage", "Total Cost", "Total Usage", and "Total Showers".
+*   **History**: Shows a list of all your past sessions with details (Date, Duration, Cost).
 
 ## Settings
 Navigate to the **Settings** tab (Gear Icon) to customize your experience:

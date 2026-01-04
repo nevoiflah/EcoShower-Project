@@ -27,9 +27,97 @@ function Dashboard() {
   const [error, setError] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
 
+  // New State for Filtering
+  const [rawHistory, setRawHistory] = useState([])
+  const [range, setRange] = useState('7d') // '7d', '30d', 'all'
+
+  // Load data on mount
   useEffect(() => {
     loadDashboardData()
   }, [])
+
+  // Filter/Aggregate data whenever range or rawHistory changes
+  useEffect(() => {
+    if (!rawHistory.length) {
+      setChartData([])
+      return
+    }
+
+    let processed = []
+
+    if (range === 'all') {
+      // Aggregate by Month for "All Time"
+      const monthlyData = {}
+      rawHistory.forEach(session => {
+        // robust date parsing
+        const dateStr = session.start_time || session.startTime || session.date || '';
+        if (!dateStr) return;
+
+        const date = new Date(dateStr)
+        if (isNaN(date.getTime())) return;
+
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` // YYYY-MM
+
+        if (!monthlyData[key]) {
+          monthlyData[key] = {
+            date: key,
+            day: isRTL ?
+              date.toLocaleDateString('he-IL', { month: 'short', year: '2-digit' }) :
+              date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+            liters: 0,
+            cost: 0
+          }
+        }
+        const water = Number(session.water_saved || session.waterSaved || 0)
+        monthlyData[key].liters += water
+        monthlyData[key].cost += (session.cost || 0)
+      })
+      processed = Object.values(monthlyData).sort((a, b) => a.date.localeCompare(b.date))
+
+    } else {
+      // Daily Data for 7d/30d
+      const days = isRTL
+        ? ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳']
+        : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+      const dailyMap = {}
+      rawHistory.forEach(session => {
+        const dateStr = session.start_time || session.startTime || session.date || '';
+        if (!dateStr) return;
+
+        const dateKey = dateStr.split('T')[0]
+        if (!dailyMap[dateKey]) {
+          const d = new Date(dateKey)
+          if (!isNaN(d.getTime())) {
+            dailyMap[dateKey] = {
+              date: dateKey,
+              day: days[d.getDay()],
+              liters: 0,
+              cost: 0
+            }
+          }
+        }
+        if (dailyMap[dateKey]) {
+          const water = Number(session.water_saved || session.waterSaved || 0)
+          dailyMap[dateKey].liters += water
+          dailyMap[dateKey].cost += (session.cost || 0)
+        }
+      })
+
+      let sortedDaily = Object.values(dailyMap).sort((a, b) => new Date(a.date) - new Date(b.date))
+
+      // Fill missing days for shorter ranges to make the graph look complete
+      // (Optional, but good for UX) -> Simplification: just slice exist data for now
+      // Better: Slice last N days from the sorted list
+
+      const daysToShow = range === '7d' ? 7 : 30
+      processed = sortedDaily.slice(-daysToShow)
+    }
+
+    setChartData(processed)
+
+  }, [range, rawHistory, isRTL])
+
 
   const loadDashboardData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
@@ -42,13 +130,12 @@ function Dashboard() {
       try {
         const summaryRes = await getDashboardSummary()
         console.log('Summary response:', summaryRes)
-        // Handle various response formats
         summaryData = summaryRes?.summary || summaryRes?.stats || summaryRes || {}
       } catch (e) {
         console.error('Summary error:', e)
       }
 
-      // Extract stats with fallbacks
+      // Extract stats
       setStats({
         todayUsage: Number(summaryData.today_usage ?? summaryData.todayUsage ?? summaryData.today ?? 0),
         monthlyUsage: Number(summaryData.monthly_usage ?? summaryData.monthlyUsage ?? summaryData.monthly ?? 0),
@@ -56,12 +143,11 @@ function Dashboard() {
         totalSessions: Number(summaryData.total_sessions ?? summaryData.totalSessions ?? summaryData.sessions ?? 0)
       })
 
-      // Load history for charts
+      // Load history
       try {
-        const historyRes = await getDashboardHistory({ days: 7 })
-        console.log('History response:', historyRes)
+        const historyRes = await getDashboardHistory({ limit: 3650 }) // Fetch "All Time"
 
-        // Extract history array - handle various formats
+        // Normalize array
         let historyArray = []
         if (Array.isArray(historyRes)) {
           historyArray = historyRes
@@ -73,60 +159,23 @@ function Dashboard() {
           historyArray = historyRes.data
         }
 
-        // Build chart data from history
-        const days = isRTL
-          ? ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳']
-          : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-        // Initialize last 7 days
-        const dailyData = {}
-        const now = new Date()
-        for (let i = 6; i >= 0; i--) {
-          const date = new Date(now)
-          date.setDate(date.getDate() - i)
-          const key = date.toISOString().split('T')[0]
-          dailyData[key] = {
-            date: key,
-            day: days[date.getDay()],
-            liters: 0,
-            cost: 0
-          }
-        }
-
-        // Aggregate session data if we have history
         const waterPrice = summaryData.water_price || summaryData.waterPrice || 0.008
-        if (historyArray.length > 0) {
-          historyArray.forEach(session => {
-            if (!session) return
-            const dateStr = session.start_time || session.startTime || session.date || session.timestamp || ''
-            const dateKey = dateStr.split('T')[0]
-            if (dailyData[dateKey]) {
-              const water = Number(session.water_saved ?? session.waterSaved ?? session.water ?? 0)
-              dailyData[dateKey].liters += water
-              dailyData[dateKey].cost += water * waterPrice
-            }
-          })
-        }
 
-        setChartData(Object.values(dailyData))
+        // Pre-calculate cost and clean data for filters
+        const cleanHistory = historyArray.map(s => ({
+          ...s,
+          water_saved: Number(s.water_saved ?? s.waterSaved ?? s.water ?? 0),
+          cost: Number(s.water_saved ?? s.waterSaved ?? s.water ?? 0) * waterPrice,
+          start_time: s.start_time || s.startTime || s.date || s.timestamp || ''
+        })).filter(s => s.start_time)
+
+        setRawHistory(cleanHistory)
+
+        // Note: setChartData is handled by useEffect now
+
       } catch (e) {
         console.error('History error:', e)
-        // Set empty chart data on error
-        const days = isRTL
-          ? ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳']
-          : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-        const emptyData = []
-        const now = new Date()
-        for (let i = 6; i >= 0; i--) {
-          const date = new Date(now)
-          date.setDate(date.getDate() - i)
-          emptyData.push({
-            day: days[date.getDay()],
-            liters: 0,
-            cost: 0
-          })
-        }
-        setChartData(emptyData)
+        setRawHistory([])
       }
 
     } catch (err) {
@@ -178,7 +227,15 @@ function Dashboard() {
             {isRTL ? 'הנה הסטטיסטיקות שלך' : "Here's your statistics"}
           </p>
         </div>
+
         <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          {/* Range Selectors */}
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button onClick={() => setRange('7d')} className={`px-3 py-1 text-xs rounded-md transition-all ${range === '7d' ? 'bg-white shadow text-blue-600 font-medium' : 'text-gray-500 hover:text-gray-700'}`}>{t('last7Days')}</button>
+            <button onClick={() => setRange('30d')} className={`px-3 py-1 text-xs rounded-md transition-all ${range === '30d' ? 'bg-white shadow text-blue-600 font-medium' : 'text-gray-500 hover:text-gray-700'}`}>{t('last30Days')}</button>
+            <button onClick={() => setRange('all')} className={`px-3 py-1 text-xs rounded-md transition-all ${range === 'all' ? 'bg-white shadow text-blue-600 font-medium' : 'text-gray-500 hover:text-gray-700'}`}>{t('allTime')}</button>
+          </div>
+
           <button
             onClick={() => loadDashboardData(true)}
             disabled={refreshing}
@@ -207,7 +264,7 @@ function Dashboard() {
           </div>
           <p className="text-2xl font-bold">₪{stats.moneySaved.toFixed(2)}</p>
           <p className="text-sm text-gray-600">{t('moneySaved')}</p>
-          <p className="text-xs text-gray-400">{isRTL ? 'החודש' : 'this month'}</p>
+          <p className="text-xs text-gray-400">{isRTL ? 'כל הזמן' : 'all time'}</p>
         </div>
 
         <div className="bg-cyan-50 rounded-xl p-4">
@@ -215,7 +272,7 @@ function Dashboard() {
             <Zap className="w-6 h-6 text-cyan-500" />
           </div>
           <p className="text-2xl font-bold">{stats.monthlyUsage.toFixed(1)}L</p>
-          <p className="text-sm text-gray-500">{isRTL ? 'נצרכו החודש' : 'Used this month'}</p>
+          <p className="text-sm text-gray-500">{isRTL ? 'נצרכו סה"כ' : 'Used all time'}</p>
           <p className="text-xs text-gray-400">{t('liters')}</p>
         </div>
 
@@ -229,12 +286,12 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Weekly Usage Chart */}
+      {/* Usage Chart */}
       <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
         <h2 className="font-semibold mb-4">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="w-5 h-5 text-gray-600" />
-            <span className="font-semibold text-gray-700">{isRTL ? 'צריכה שבועית' : 'Weekly Usage'}</span>
+            <span className="font-semibold text-gray-700">{isRTL ? 'צריכה' : 'Usage History'}</span>
           </div>
         </h2>
         <div className="h-48">
@@ -264,12 +321,12 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Daily Savings Chart */}
+      {/* Cost Chart */}
       <div className="bg-white rounded-xl shadow-sm p-4">
         <h2 className="font-semibold mb-4">
           <div className="flex items-center gap-2 mb-4">
             <Wallet className="w-5 h-5 text-gray-600" />
-            <span className="font-semibold text-gray-700">{isRTL ? 'חיסכון יומי' : 'Daily Savings'}</span>
+            <span className="font-semibold text-gray-700">{t('costHistory')}</span>
           </div>
         </h2>
         <div className="h-40">
@@ -278,7 +335,7 @@ function Dashboard() {
               <XAxis dataKey="day" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip
-                formatter={(value) => [`₪${Number(value).toFixed(2)}`, isRTL ? 'חיסכון' : 'Saved']}
+                formatter={(value) => [`₪${Number(value).toFixed(2)}`, isRTL ? 'עלות' : 'Cost']}
               />
               <Bar dataKey="cost" fill="#10b981" radius={[4, 4, 0, 0]} />
             </BarChart>

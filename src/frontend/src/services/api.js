@@ -322,8 +322,9 @@ export const updateSettings = async (settings) => {
 
 // ============= ADMIN =============
 
-export const getAdminStats = async () => {
-  const data = await apiRequest('/admin/stats');
+export const getAdminStats = async (userId = null) => {
+  const url = userId ? `/admin/stats?userId=${userId}` : '/admin/stats';
+  const data = await apiRequest(url);
 
   // Backend returns: total_users, total_devices, total_sessions, total_water_saved
   return {

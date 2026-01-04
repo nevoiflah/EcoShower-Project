@@ -39,7 +39,11 @@ The **Users Table** lists all registered accounts.
     *   Click the **Blue Shield** icon to **Promote** a User to Admin.
     *   Click the **Orange Shield** icon to **Demote** an Admin to User.
     *   *Note*: This updates their permissions immediately.
-2.  **Delete User**:
+3.  **Filter Stats (Show Data)**:
+    *   Click the **"Show Data"** button in any user row.
+    *   The Dashboard Stats and Activity Chart will update to show **only** that user's activity.
+    *   To clear the filter, click the **"Clear Filter"** button at the top of the page.
+4.  **Delete User**:
     *   Click the **Red Trash** icon.
     *   Confirm the dialog ("Are you sure you want to delete...?").
     *   *Warning*: This permanently removes the user, their devices, and history from the database and Cognito.

@@ -749,9 +749,8 @@ def get_summary(user_id: str) -> dict:
             'avg_per_session': 0
         })
     
-    # Get sessions for this month
+    # Get all-time sessions
     now = datetime.utcnow()
-    month_start = now.replace(day=1, hour=0, minute=0, second=0).isoformat()
     today_start = now.replace(hour=0, minute=0, second=0).isoformat()
     
     total_water = Decimal('0')
@@ -760,18 +759,19 @@ def get_summary(user_id: str) -> dict:
     session_count = 0
     
     for device_id in device_ids:
+        # Fetch all sessions for device
         result = sessions_table.query(
             IndexName='device-index',
-            KeyConditionExpression=Key('device_id').eq(device_id) & Key('start_time').gte(month_start)
+            KeyConditionExpression=Key('device_id').eq(device_id)
         )
         
         for session in result.get('Items', []):
             if session.get('status') == 'completed':
+                # Global Totals (All Time)
+                session_count += 1
                 total_water += session.get('water_saved', Decimal('0'))
                 total_money += session.get('money_saved', Decimal('0'))
-                session_count += 1
                 
-                # Check if today
                 start_time = session.get('start_time', '')
                 if start_time >= today_start:
                     today_usage += session.get('water_saved', Decimal('0'))
@@ -784,7 +784,7 @@ def get_summary(user_id: str) -> dict:
         'sessions_count': session_count,
         'avg_per_session': float(avg_per_session),
         'today_usage': float(today_usage),
-        'period': 'month'
+        'period': 'all_time'
     })
 
 
@@ -1084,10 +1084,9 @@ def handle_admin(method: str, path: str, params: dict, query: dict, body: dict =
 
     
     if '/stats' in path:
-        return get_system_stats()
-    
-    elif '/devices' in path:
-        return list_all_devices()
+        # Check for userId in query params for filtering
+        target_user_id = query.get('userId') if query else None
+        return get_system_stats(target_user_id)
     
     elif '/devices' in path:
         return list_all_devices()
@@ -1095,12 +1094,24 @@ def handle_admin(method: str, path: str, params: dict, query: dict, body: dict =
     return response(404, {'error': 'Admin route not found'})
 
 
-def get_system_stats() -> dict:
-    """Get system-wide statistics"""
+def get_system_stats(target_user_id: str = None) -> dict:
+    """
+    Get system-wide statistics.
+    If target_user_id is provided, return stats ONLY for that user.
+    """
     # Scan all tables fully
     users_res = scan_all_items(users_table)
     devices_res = scan_all_items(devices_table)
     sessions_res = scan_all_items(sessions_table)
+    
+    # If filtering by user, filter the lists first
+    if target_user_id:
+        users_res = [u for u in users_res if u.get('user_id') == target_user_id]
+        # Identify devices owned by this user
+        user_devices = {d.get('device_id') for d in devices_res if d.get('user_id') == target_user_id}
+        devices_res = [d for d in devices_res if d.get('device_id') in user_devices]
+        # Identify sessions from those devices
+        sessions_res = [s for s in sessions_res if s.get('device_id') in user_devices]
     
     # Simple counts
     users_count = len(users_res)

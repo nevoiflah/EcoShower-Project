@@ -5,7 +5,7 @@ export const translations = {
     devices: 'מכשירים',
     history: 'היסטוריה',
     settings: 'הגדרות',
-    
+
     // Settings page
     profile: 'פרופיל',
     name: 'שם',
@@ -16,19 +16,19 @@ export const translations = {
     saving: 'שומר...',
     settingsSaved: 'ההגדרות נשמרו בהצלחה!',
     settingsError: 'שגיאה בשמירת ההגדרות',
-    
+
     // Shower profiles
     showerProfiles: 'פרופילי מקלחת',
     add: 'הוסף',
     cancel: 'ביטול',
     temperature: 'טמפרטורה',
-    
+
     // Notifications
     notifications: 'התראות',
     pushNotifications: 'Push notifications',
     emailNotifications: 'התראות אימייל',
     deviceOfflineAlert: 'התראת מכשיר לא מקוון',
-    
+
     // System
     system: 'מערכת',
     temperatureUnit: 'יחידות טמפרטורה',
@@ -38,28 +38,34 @@ export const translations = {
     hebrew: 'עברית',
     english: 'English',
     waterPricePerLiter: 'מחיר מים לליטר',
-    
+
     // Auth
     logout: 'התנתק',
     login: 'התחבר',
     register: 'הרשמה',
     forgotPassword: 'שכחתי סיסמה',
-    
+
     // Dashboard
     welcomeBack: 'ברוך הבא',
     todayUsage: 'צריכה היום',
     liters: 'ליטר',
-    monthlyUsage: 'צריכה חודשית',
-    moneySaved: 'כסף שנחסך',
+    monthlyUsage: 'סה"כ צריכה',
+    moneySaved: 'עלות כוללת',
     activeDevices: 'מכשירים פעילים',
-    
+
     // Devices
     addDevice: 'הוסף מכשיר',
     deviceName: 'שם המכשיר',
     deviceStatus: 'סטטוס',
     online: 'מקוון',
     offline: 'לא מקוון',
-    
+
+    // Dashboard Filters
+    last7Days: '7 ימים אחרונים',
+    last30Days: '30 ימים אחרונים',
+    allTime: 'הכל',
+    costHistory: 'היסטוריית עלויות',
+
     // History
     showerHistory: 'היסטוריית מקלחות',
     date: 'תאריך',
@@ -67,7 +73,7 @@ export const translations = {
     waterUsed: 'צריכת מים',
     cost: 'עלות',
     minutes: 'דקות',
-    
+
     // Common
     loading: 'טוען...',
     error: 'שגיאה',
@@ -77,14 +83,14 @@ export const translations = {
     edit: 'ערוך',
     close: 'סגור',
   },
-  
+
   en: {
     // Navigation
     home: 'Home',
     devices: 'Devices',
     history: 'History',
     settings: 'Settings',
-    
+
     // Settings page
     profile: 'Profile',
     name: 'Name',
@@ -95,19 +101,19 @@ export const translations = {
     saving: 'Saving...',
     settingsSaved: 'Settings saved successfully!',
     settingsError: 'Error saving settings',
-    
+
     // Shower profiles
     showerProfiles: 'Shower Profiles',
     add: 'Add',
     cancel: 'Cancel',
     temperature: 'Temperature',
-    
+
     // Notifications
     notifications: 'Notifications',
     pushNotifications: 'Push notifications',
     emailNotifications: 'Email notifications',
     deviceOfflineAlert: 'Device offline alert',
-    
+
     // System
     system: 'System',
     temperatureUnit: 'Temperature Unit',
@@ -117,28 +123,34 @@ export const translations = {
     hebrew: 'עברית',
     english: 'English',
     waterPricePerLiter: 'Water price per liter',
-    
+
     // Auth
     logout: 'Logout',
     login: 'Login',
     register: 'Register',
     forgotPassword: 'Forgot Password',
-    
+
     // Dashboard
     welcomeBack: 'Welcome back',
     todayUsage: 'Today Usage',
     liters: 'liters',
-    monthlyUsage: 'Monthly Usage',
-    moneySaved: 'Money Saved',
+    monthlyUsage: 'Total Usage',
+    moneySaved: 'Total Cost',
     activeDevices: 'Active Devices',
-    
+
     // Devices
     addDevice: 'Add Device',
     deviceName: 'Device Name',
     deviceStatus: 'Status',
     online: 'Online',
     offline: 'Offline',
-    
+
+    // Dashboard Filters
+    last7Days: 'Last 7 Days',
+    last30Days: 'Last 30 Days',
+    allTime: 'All Time',
+    costHistory: 'Cost History',
+
     // History
     showerHistory: 'Shower History',
     date: 'Date',
@@ -146,7 +158,7 @@ export const translations = {
     waterUsed: 'Water Used',
     cost: 'Cost',
     minutes: 'minutes',
-    
+
     // Common
     loading: 'Loading...',
     error: 'Error',

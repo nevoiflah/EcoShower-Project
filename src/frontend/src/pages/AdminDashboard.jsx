@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 import { getAdminStats, getAdminUsers, deleteUser, updateUserRole } from '../services/api'
-import { Users, Droplets, Activity, ArrowLeft, ArrowRight, RefreshCw, Trash2, Shield, ShieldOff, UserX, AlertCircle, TrendingUp } from 'lucide-react'
+import { Users, Droplets, Activity, ArrowLeft, ArrowRight, RefreshCw, Trash2, Shield, ShieldOff, UserX, AlertCircle, TrendingUp, BarChart3 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 function AdminDashboard() {
@@ -28,6 +28,8 @@ function AdminDashboard() {
   const [error, setError] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
   const [processing, setProcessing] = useState(null)
+  const [selectedUserId, setSelectedUserId] = useState(null)
+  const [selectedUserName, setSelectedUserName] = useState(null)
 
   useEffect(() => {
     const isAdmin = user?.role === 'admin' || user?.['custom:role'] === 'admin'
@@ -40,15 +42,19 @@ function AdminDashboard() {
     loadData()
   }, [user, navigate])
 
-  const loadData = async (isRefresh = false) => {
+  const loadData = async (isRefresh = false, targetUserId = null) => {
     if (isRefresh) setRefreshing(true)
     else setLoading(true)
     setError(null)
 
+    // Use current selectedUserId if targetUserId is not provided specifically
+    // Use 'null' to explicitly reset if needed, but here we default to state
+    const uid = targetUserId !== undefined ? targetUserId : selectedUserId
+
     try {
-      // Load admin stats
+      // Load admin stats (optionally filtered by user)
       try {
-        const statsRes = await getAdminStats()
+        const statsRes = await getAdminStats(uid)
         console.log('Admin stats response:', statsRes)
 
         const statsData = statsRes?.stats || statsRes || {}
@@ -68,26 +74,25 @@ function AdminDashboard() {
         console.error('Stats error:', e)
       }
 
-      // Load admin users
-      try {
-        const usersRes = await getAdminUsers()
-        console.log('Admin users response:', usersRes)
-
-        // Extract users array
-        let usersArray = []
-        if (Array.isArray(usersRes)) {
-          usersArray = usersRes
-        } else if (Array.isArray(usersRes?.users)) {
-          usersArray = usersRes.users
-        } else if (Array.isArray(usersRes?.data)) {
-          usersArray = usersRes.data
-        } else if (Array.isArray(usersRes?.items)) {
-          usersArray = usersRes.items
+      // Load admin users (always all users)
+      if (!uid) { // Only reload users list if showing global context or initial load
+        try {
+          const usersRes = await getAdminUsers()
+          // ... (rest of users loading)
+          let usersArray = []
+          if (Array.isArray(usersRes)) {
+            usersArray = usersRes
+          } else if (Array.isArray(usersRes?.users)) {
+            usersArray = usersRes.users
+          } else if (Array.isArray(usersRes?.data)) {
+            usersArray = usersRes.data
+          } else if (Array.isArray(usersRes?.items)) {
+            usersArray = usersRes.items
+          }
+          setUsers(usersArray)
+        } catch (e) {
+          console.error('Users error:', e)
         }
-
-        setUsers(usersArray)
-      } catch (e) {
-        console.error('Users error:', e)
       }
 
     } catch (err) {
@@ -99,7 +104,21 @@ function AdminDashboard() {
     }
   }
 
+  const handleShowUserStats = (userId, userName) => {
+    if (userId === selectedUserId) {
+      // Toggle off
+      setSelectedUserId(null)
+      setSelectedUserName(null)
+      loadData(false, null)
+    } else {
+      setSelectedUserId(userId)
+      setSelectedUserName(userName)
+      loadData(false, userId)
+    }
+  }
+
   const handleDeleteUser = async (userId, userName) => {
+    // ... (existing delete code)
     if (!window.confirm(`${isRTL ? 'האם למחוק את' : 'Delete user'} ${userName}? \n${isRTL ? 'פעולה זו אינה הפיכה.' : 'This cannot be undone.'}`)) {
       return
     }
@@ -187,9 +206,19 @@ function AdminDashboard() {
               {isRTL ? 'פאנל ניהול' : 'Admin Panel'}
             </h1>
             <p className="text-gray-500">
-              {isRTL ? 'סטטיסטיקות מערכת' : 'System Statistics'}
+              {selectedUserId
+                ? (isRTL ? `מציג נתונים עבור: ${selectedUserName}` : `Viewing data for: ${selectedUserName}`)
+                : (isRTL ? 'סטטיסטיקות מערכת' : 'System Statistics')}
             </p>
           </div>
+          {selectedUserId && (
+            <button
+              onClick={() => handleShowUserStats(selectedUserId, null)}
+              className="text-sm bg-gray-100 px-2 py-1 rounded hover:bg-gray-200"
+            >
+              {isRTL ? 'נקה סינון' : 'Clear Filter'}
+            </button>
+          )}
         </div>
         <button
           onClick={() => loadData(true)}
@@ -299,52 +328,52 @@ function AdminDashboard() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
-                {users.map((u, index) => (
-                  <tr key={getUserId(u) || index} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{getUserName(u) || '-'}</td>
-                    <td className="px-4 py-3 text-gray-600" dir="ltr">{getUserEmail(u) || '-'}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-xs ${getUserRole(u) === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'
-                        }`}>
-                        {getUserRole(u) === 'admin' ? (isRTL ? 'מנהל' : 'Admin') : (isRTL ? 'משתמש' : 'User')}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">{getDevicesCount(u)}</td>
-                    <td className="px-4 py-3">{getSessionsCount(u)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {getUserRole(u) === 'admin' ? (
-                          <button
-                            onClick={() => handleUpdateRole(getUserId(u), 'user')}
-                            disabled={processing === getUserId(u)}
-                            title={isRTL ? 'הפוך למשתמש רגיל' : 'Demote to User'}
-                            className="p-1.5 text-orange-600 bg-orange-50 rounded hover:bg-orange-100"
-                          >
-                            <ShieldOff className="w-4 h-4" />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleUpdateRole(getUserId(u), 'admin')}
-                            disabled={processing === getUserId(u)}
-                            title={isRTL ? 'הפוך למנהל' : 'Promote to Admin'}
-                            className="p-1.5 text-blue-600 bg-blue-50 rounded hover:bg-blue-100"
-                          >
-                            <Shield className="w-4 h-4" />
-                          </button>
-                        )}
+              <tbody className="divide-y divide-gray-200">
+                {users.map((u) => {
+                  const uid = getUserId(u)
+                  const uname = getUserName(u)
+                  const uemail = getUserEmail(u)
+                  const urole = getUserRole(u)
+                  // Highlight row if selected
+                  const isSelected = uid === selectedUserId
+
+                  return (
+                    <tr key={uid} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{uname}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500">{uemail}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        <select
+                          value={urole}
+                          onChange={(e) => handleUpdateRole(uid, e.target.value)}
+                          className="border rounded px-2 py-1 text-xs"
+                          disabled={processing === uid}
+                        >
+                          <option value="user">User</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500">{getDevicesCount(u)}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500">{getSessionsCount(u)}</td>
+                      <td className="px-4 py-3 text-sm flex gap-2">
                         <button
-                          onClick={() => handleDeleteUser(getUserId(u), getUserName(u))}
-                          disabled={processing === getUserId(u)}
+                          onClick={() => handleShowUserStats(uid, uname)}
+                          className={`p-1.5 rounded-lg transition-colors ${isSelected ? 'bg-blue-600 text-white' : 'text-blue-600 hover:bg-blue-50'}`}
+                          title={isRTL ? 'הצג נתונים' : 'Show Data'}
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(uid, uname)}
+                          disabled={processing === uid}
+                          className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors"
                           title={isRTL ? 'מחק משתמש' : 'Delete User'}
-                          className="p-1.5 text-red-600 bg-red-50 rounded hover:bg-red-100"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
