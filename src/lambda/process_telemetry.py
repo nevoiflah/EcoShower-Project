@@ -149,10 +149,11 @@ def handle_water_ready(device_id: str, user_id: str, device: dict):
     )
     
     # 3. Send push notification
+    target_temp = device.get('target_temp', 38)
     send_notification(
         user_id=user_id,
         title='💧 המים מוכנים!',
-        message=f'המים ב{device.get("name", "מקלחת")} הגיעו לטמפרטורה הרצויה. אפשר להיכנס!',
+        message=f'המים ב{device.get("name", "מקלחת")} הגיעו לטמפרטורה של {target_temp}°C. אפשר להיכנס!',
         notification_type='WATER_READY',
         device_id=device_id
     )

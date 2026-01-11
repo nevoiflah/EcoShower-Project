@@ -80,6 +80,7 @@ function Dashboard() {
         ? ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳']
         : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+      // 1. Build Map of Existing Data
       const dailyMap = {}
       rawHistory.forEach(session => {
         const dateStr = session.start_time || session.startTime || session.date || '';
@@ -87,31 +88,47 @@ function Dashboard() {
 
         const dateKey = dateStr.split('T')[0]
         if (!dailyMap[dateKey]) {
-          const d = new Date(dateKey)
-          if (!isNaN(d.getTime())) {
-            dailyMap[dateKey] = {
-              date: dateKey,
-              day: days[d.getDay()],
-              liters: 0,
-              cost: 0
-            }
-          }
+          dailyMap[dateKey] = { liters: 0, cost: 0 }
         }
-        if (dailyMap[dateKey]) {
-          const water = Number(session.water_saved || session.waterSaved || 0)
-          dailyMap[dateKey].liters += water
-          dailyMap[dateKey].cost += (session.cost || 0)
-        }
+
+        const water = Number(session.water_saved || session.waterSaved || 0)
+        dailyMap[dateKey].liters += water
+        dailyMap[dateKey].cost += (session.cost || 0)
       })
 
-      let sortedDaily = Object.values(dailyMap).sort((a, b) => new Date(a.date) - new Date(b.date))
+      // 2. Generate Full Date Range (Fill Gaps)
+      const numDays = range === '7d' ? 7 : 30
+      const today = new Date()
+      const filledData = []
 
-      // Fill missing days for shorter ranges to make the graph look complete
-      // (Optional, but good for UX) -> Simplification: just slice exist data for now
-      // Better: Slice last N days from the sorted list
+      // Iterate backwards from Today to (Today - numDays + 1)
+      // Or easier: Start from (Today - numDays + 1) and go to Today
+      for (let i = numDays - 1; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(today.getDate() - i) // i=6 (7 days ago) ... i=0 (today)
 
-      const daysToShow = range === '7d' ? 7 : 30
-      processed = sortedDaily.slice(-daysToShow)
+        const dateKey = d.toISOString().split('T')[0]
+        const dayLabel = days[d.getDay()]
+
+        if (dailyMap[dateKey]) {
+          filledData.push({
+            date: dateKey,
+            day: dayLabel,
+            liters: dailyMap[dateKey].liters,
+            cost: dailyMap[dateKey].cost
+          })
+        } else {
+          // Missing day -> Zero value
+          filledData.push({
+            date: dateKey,
+            day: dayLabel,
+            liters: 0,
+            cost: 0
+          })
+        }
+      }
+
+      processed = filledData
     }
 
     setChartData(processed)
