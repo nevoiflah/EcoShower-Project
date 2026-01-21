@@ -658,12 +658,24 @@ def stop_session(device_id: str, body: dict, user_id: str, role: str = 'user') -
         elapsed_seconds = Decimal(str((now - start_time).total_seconds()))
     
     # Constants
-    WATER_COST_PER_LITER = Decimal('0.008')
+    # Fetch water price from user settings
+    water_cost_per_liter = Decimal('0.008') # Default
+    try:
+        user_res = users_table.get_item(Key={'user_id': user_id})
+        user_item = user_res.get('Item', {})
+        system_settings = user_item.get('system', {})
+        price_setting = system_settings.get('water_price_per_liter') or system_settings.get('waterPricePerLiter')
+        if price_setting:
+            water_cost_per_liter = Decimal(str(price_setting))
+            print(f"DEBUG: Using custom water price in stop_session: {water_cost_per_liter}")
+    except Exception as e:
+        print(f"Error fetching water price for session stop: {e}")
+
     LITERS_PER_SECOND = Decimal('0.8')  # Updated to 0.8L/s (Water Used)
     
     # We store "water used" in the 'water_saved' column for schema compatibility
     water_used = elapsed_seconds * LITERS_PER_SECOND
-    money_saved = water_used * WATER_COST_PER_LITER
+    money_saved = water_used * water_cost_per_liter
     
     # Update session
     sessions_table.update_item(

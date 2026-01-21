@@ -106,7 +106,7 @@ function History() {
   const totals = sessions.reduce((acc, session) => ({
     waterSaved: acc.waterSaved + getWaterSaved(session),
     duration: acc.duration + getDuration(session),
-    cost: acc.cost + (getWaterSaved(session) * waterPrice)
+    cost: acc.cost + (Number(session.moneySaved || session.money_saved) || (getWaterSaved(session) * waterPrice))
   }), { waterSaved: 0, duration: 0, cost: 0 })
 
   if (loading) {
@@ -240,7 +240,7 @@ function History() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-green-600">
-                    ₪{(getWaterSaved(session) * waterPrice).toFixed(2)}
+                    ₪{(Number(session.moneySaved || session.money_saved) || (getWaterSaved(session) * waterPrice)).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500">
                     {isRTL ? 'עלות' : 'Cost'}

@@ -22,7 +22,11 @@ export default function DeviceControlModal({ isOpen, onClose, device, isRTL, onU
         const loadPrefs = async () => {
             try {
                 const data = await getSettings();
-                const unit = data.settings?.system?.temperatureUnit || 'celsius';
+                const s = data.settings || data || {};
+                const sys = s.system || {};
+                // Check all possible paths
+                const unit = sys.temperatureUnit || sys.temperature_unit || s.temperatureUnit || s.temperature_unit || 'celsius';
+                console.log('DeviceModal: Fetched unit:', unit); // Debug
                 setIsFahrenheit(unit === 'fahrenheit');
             } catch (e) {
                 console.warn("Failed to load settings in modal:", e);
@@ -122,7 +126,7 @@ export default function DeviceControlModal({ isOpen, onClose, device, isRTL, onU
             // But to minimize logic drift, let's keep `targetTemp` in Celsius always, 
             // and just convert for the render phase. This avoids "drift" on repeated C<->F conversions.
 
-            await updateDevice(device.deviceId, { target_temp: targetTemp });
+            await updateDevice(device.deviceId, { targetTemp: targetTemp });
 
             // We locally set status (optimistic UI)
             setStatus('heating');
