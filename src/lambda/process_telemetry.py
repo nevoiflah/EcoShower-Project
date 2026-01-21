@@ -173,16 +173,27 @@ def handle_water_ready(device_id: str, user_id: str, device: dict):
                 unit_display = "°F"
             except (ValueError, TypeError):
                 pass 
+        
+        # Check language preference
+        language = system.get('language', 'he')
+        device_name = device.get('name', 'Shower' if language == 'en' else 'מקלחת')
+        
+        if language == 'en':
+            message_text = f"The water in your {device_name} has reached {temp_display}{unit_display}. The shower is ready!"
+            title_text = "💧 Water is ready!"
+        else:
+            message_text = f'המים ב{device_name} הגיעו לטמפרטורה של {temp_display}{unit_display}. המקלחת מוכנה!'
+            title_text = '💧 המים מוכנים!'
                 
     except Exception as e:
-        print(f"Error checking user unit preference: {e}")
-
-    # Tracer: Added 'כעת' (now) or just changed syntax to verify deployment
-    message_text = f'המים ב{device.get("name", "מקלחת")} הגיעו לטמפרטורה של {temp_display}{unit_display}. המקלחת מוכנה!'
+        print(f"Error checking user preferences: {e}")
+        # Default Hebrew if lookup fails
+        message_text = f'המים מוכנים! ({target_temp}°C)'
+        title_text = '💧 המים מוכנים!'
 
     send_notification(
         user_id=user_id,
-        title='💧 המים מוכנים!',
+        title=title_text,
         message=message_text,
         notification_type='WATER_READY',
         device_id=device_id

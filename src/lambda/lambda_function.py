@@ -274,18 +274,39 @@ def mark_water_ready(device_id: str, user_id: str, role: str) -> dict:
         
         target_temp = device.get('target_temp', 38)
         
-        message = (
-            f"Hello {user.get('name', 'User')},\n\n"
-            f"Your water is ready! The temperature has reached {target_temp}°C.\n"
-            f"You can now start your shower."
-        )
+        # Check settings for unit preference
+        system_settings = user.get('system', {})
+        unit_pref = system_settings.get('temperature_unit') or system_settings.get('temperatureUnit')
+        
+        temp_display = f"{target_temp}"
+        unit_display = "°C"
+        
+        if unit_pref == 'fahrenheit':
+            try:
+                c_temp = float(target_temp)
+                f_temp = (c_temp * 9/5) + 32
+                temp_display = f"{f_temp:.1f}"
+                unit_display = "°F"
+            except (ValueError, TypeError):
+                pass
+        
+        # Check language preference
+        language = system_settings.get('language', 'he')
+        device_name = device.get('name', 'Shower' if language == 'en' else 'מקלחת')
+        
+        if language == 'en':
+            message = f"The water in your {device_name} has reached {temp_display}{unit_display}. The shower is ready!"
+            title = "💧 Water is ready!"
+        else:
+            message = f'המים ב{device_name} הגיעו לטמפרטורה של {temp_display}{unit_display}. המקלחת מוכנה!'
+            title = '💧 המים מוכנים!'
         
         # Check settings
         user_settings = user.get('notifications', {})
         should_notify = user_settings.get('water_ready_alert', True)
         if str(should_notify).lower() == 'false':
             should_notify = False
-            
+        
         if should_notify:
             # Get or Create Private Topic
             topic_arn = user.get('sns_topic_arn')
@@ -306,7 +327,7 @@ def mark_water_ready(device_id: str, user_id: str, role: str) -> dict:
                 sns_client.publish(
                     TopicArn=topic_arn,
                     Message=message,
-                    Subject="EcoShower - Water Ready!"
+                    Subject=title
                 )
                 print(f"Sent Private SNS to {topic_arn}")
             else:
