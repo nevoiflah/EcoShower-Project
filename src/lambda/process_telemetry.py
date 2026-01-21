@@ -185,7 +185,7 @@ def send_notification(user_id: str, title: str, message: str,
                       notification_type: str, device_id: str):
     """Send push notification via SNS (Private Topic)"""
     try:
-        # Get user profile to find their private topic
+        # Get user profile to find their private topic and settings
         user_res = users_table.get_item(Key={'user_id': user_id})
         user = user_res.get('Item')
         
@@ -206,14 +206,49 @@ def send_notification(user_id: str, title: str, message: str,
             print(f"User {user_id} has disabled water ready alerts. Skipping.")
             return
 
+        # Handle Unit Conversion for Message
+        # We parse the message to find the temperature (assuming it's formatted as "... {temp}°C ...")
+        # Or better yet, we simply reconstruction the message here if it's 'WATER_READY'
+        # The original message passed in is: '... temperature of {target_temp}°C...'
+        
+        final_message = message
+        if notification_type == 'WATER_READY':
+            system_settings = user.get('system', {})
+            unit = system_settings.get('temperature_unit', 'celsius')
+            
+            if unit == 'fahrenheit':
+                # We need to extract the temp or re-fetch it. 
+                # Ideally, handle_water_ready should have passed the temp, but we can get it from the device
+                # For safety and cleaner code, let's look up the device again or use what we have.
+                # However, this function is generic. 
+                # Let's try to extract the number from the message string as a quick fix, 
+                # OR (cleaner) – let call site handle it? 
+                # The call site `handle_water_ready` didn't check user prefs.
+                # So we do it here.
+                
+                # Check if message contains "°C"
+                if "°C" in message:
+                    import re
+                    # extract numbers
+                    match = re.search(r"(\d+(\.\d+)?)°C", message)
+                    if match:
+                        c_temp = float(match.group(1))
+                        f_temp = (c_temp * 9/5) + 32
+                        final_message = message.replace(f"{c_temp}°C", f"{f_temp:.1f}°F").replace("C", "F")
+                        # Also replace any other "C" if it was just text, but the regex covers the value.
+                        # Wait, the replace above might miss if formatting changed.
+                        # Ideally, better to reconstruction the message if we had parameters.
+                        # But since we don't change message structure often:
+                        final_message = message.replace(f"{match.group(1)}°C", f"{round(f_temp, 1)}°F")
+
         sns_client.publish(
             TopicArn=topic_arn,
             Message=json.dumps({
-                'default': message,
+                'default': final_message,
                 'GCM': json.dumps({
                     'notification': {
                         'title': title,
-                        'body': message
+                        'body': final_message
                     },
                     'data': {
                         'type': notification_type,

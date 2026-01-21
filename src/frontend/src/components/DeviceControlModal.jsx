@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Thermometer, Timer, Power, Droplets, ShowerHead } from 'lucide-react'
-import { startShowerSession, endShowerSession, openValve, markWaterReady, sendDeviceCommand, updateDevice } from '../services/api';
+import { startShowerSession, endShowerSession, openValve, markWaterReady, sendDeviceCommand, updateDevice, getSettings } from '../services/api';
 
 export default function DeviceControlModal({ isOpen, onClose, device, isRTL, onUpdate }) {
     const [targetTemp, setTargetTemp] = useState(38)
@@ -11,6 +11,25 @@ export default function DeviceControlModal({ isOpen, onClose, device, isRTL, onU
     const [error, setError] = useState(null)
     const [elapsedTime, setElapsedTime] = useState(0)
     const [currentSessionId, setCurrentSessionId] = useState(null)
+    const [isFahrenheit, setIsFahrenheit] = useState(false)
+
+    // Helper functions for conversion
+    const cToF = (c) => (c * 9 / 5) + 32;
+    const fToC = (f) => (f - 32) * 5 / 9;
+
+    useEffect(() => {
+        // Fetch user preferences for units
+        const loadPrefs = async () => {
+            try {
+                const data = await getSettings();
+                const unit = data.settings?.system?.temperatureUnit || 'celsius';
+                setIsFahrenheit(unit === 'fahrenheit');
+            } catch (e) {
+                console.warn("Failed to load settings in modal:", e);
+            }
+        };
+        if (isOpen) loadPrefs();
+    }, [isOpen]);
 
     useEffect(() => {
         let timer;
@@ -49,9 +68,6 @@ export default function DeviceControlModal({ isOpen, onClose, device, isRTL, onU
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
-
-    // ... inside render
-
 
     useEffect(() => {
         if (device) {
@@ -92,8 +108,6 @@ export default function DeviceControlModal({ isOpen, onClose, device, isRTL, onU
 
     if (!isOpen || !device) return null
 
-
-
     const handleStartHeating = async () => {
         setLoading(true)
         setError(null)
@@ -101,7 +115,13 @@ export default function DeviceControlModal({ isOpen, onClose, device, isRTL, onU
             // Heating ONLY sends command + updates status. No Session created yet.
             await sendDeviceCommand(device.deviceId, 'START_HEATING');
 
-            // Should also update target temp
+            // Should also update target temp (Always in Celsius for backend)
+            // Note: targetTemp state tracks the *stored* value (which is C), 
+            // but the slider might simply display F.
+            // Actually, if we want the slider to be smooth, `targetTemp` should probably follow the UI unit.
+            // But to minimize logic drift, let's keep `targetTemp` in Celsius always, 
+            // and just convert for the render phase. This avoids "drift" on repeated C<->F conversions.
+
             await updateDevice(device.deviceId, { target_temp: targetTemp });
 
             // We locally set status (optimistic UI)
@@ -161,6 +181,21 @@ export default function DeviceControlModal({ isOpen, onClose, device, isRTL, onU
         }
     }
 
+    // Display values
+    const displayTemp = isFahrenheit ? cToF(targetTemp) : targetTemp;
+    const minTemp = isFahrenheit ? 86 : 30;
+    const maxTemp = isFahrenheit ? 113 : 45;
+    const step = isFahrenheit ? 1 : 0.5;
+
+    const handleSliderChange = (e) => {
+        const val = Number(e.target.value);
+        if (isFahrenheit) {
+            setTargetTemp(fToC(val));
+        } else {
+            setTargetTemp(val);
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
             <div className="bg-white rounded-xl w-full max-w-md p-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -215,21 +250,21 @@ export default function DeviceControlModal({ isOpen, onClose, device, isRTL, onU
                 <div>
                     <label className="flex items-center gap-2 mb-2 font-medium">
                         <Thermometer className="w-5 h-5 text-red-500" />
-                        {isRTL ? 'טמפרטורה' : 'Temperature'}: {targetTemp}°C
+                        {isRTL ? 'טמפרטורה' : 'Temperature'}: {Math.round(displayTemp * 10) / 10}°{isFahrenheit ? 'F' : 'C'}
                     </label>
                     <input
                         type="range"
-                        min="30"
-                        max="45"
-                        step="0.5"
-                        value={targetTemp}
-                        onChange={(e) => setTargetTemp(Number(e.target.value))}
+                        min={minTemp}
+                        max={maxTemp}
+                        step={step}
+                        value={displayTemp}
+                        onChange={handleSliderChange}
                         className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         disabled={status === 'heating' || status === 'showering'}
                     />
                     <div className="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>30°C</span>
-                        <span>45°C</span>
+                        <span>{minTemp}°{isFahrenheit ? 'F' : 'C'}</span>
+                        <span>{maxTemp}°{isFahrenheit ? 'F' : 'C'}</span>
                     </div>
                 </div>
 
