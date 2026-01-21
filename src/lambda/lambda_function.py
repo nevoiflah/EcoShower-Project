@@ -776,9 +776,10 @@ def get_summary(user_id: str) -> dict:
     
     if not device_ids:
         return response(200, {
-            'total_water_saved': 0,
-            'total_money_saved': 0,
-            'sessions_count': 0,
+            'today_usage': 0,
+            'monthly_usage': 0,
+            'money_saved': 0,
+            'total_sessions': 0,
             'avg_per_session': 0
         })
     
@@ -811,12 +812,22 @@ def get_summary(user_id: str) -> dict:
                     
     avg_per_session = total_water / session_count if session_count > 0 else Decimal('0')
     
+    # Get user's current price for the frontend
+    current_price = Decimal('0.008')
+    try:
+        user_res = users_table.get_item(Key={'user_id': user_id})
+        user_data = user_res.get('Item', {})
+        current_price = user_data.get('system', {}).get('water_price_per_liter', Decimal('0.008'))
+    except Exception as e:
+        print(f"Error fetching current price for summary: {e}")
+
     return response(200, {
-        'total_water_saved': float(total_water),
-        'total_money_saved': float(total_money),
-        'sessions_count': session_count,
+        'money_saved': float(total_money),
+        'monthly_usage': float(total_water),
+        'total_sessions': session_count,
         'avg_per_session': float(avg_per_session),
         'today_usage': float(today_usage),
+        'water_price': float(current_price),
         'period': 'all_time'
     })
 

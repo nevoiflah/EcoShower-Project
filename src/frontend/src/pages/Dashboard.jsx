@@ -182,7 +182,7 @@ function Dashboard() {
         const cleanHistory = historyArray.map(s => ({
           ...s,
           water_saved: Number(s.water_saved ?? s.waterSaved ?? s.water ?? 0),
-          cost: Number(s.water_saved ?? s.waterSaved ?? s.water ?? 0) * waterPrice,
+          cost: Number(s.money_saved ?? s.moneySaved ?? (Number(s.water_saved ?? s.waterSaved ?? s.water ?? 0) * waterPrice)),
           start_time: s.start_time || s.startTime || s.date || s.timestamp || ''
         })).filter(s => s.start_time)
 
