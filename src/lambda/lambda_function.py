@@ -785,7 +785,14 @@ def get_summary(user_id: str) -> dict:
     
     # Get all-time sessions
     now = datetime.utcnow()
-    today_start = now.replace(hour=0, minute=0, second=0).isoformat()
+    
+    # Adjust for Israel Time (UTC+2)
+    # 00:00 Israel = 22:00 UTC previous day
+    from datetime import timedelta
+    israel_now = now + timedelta(hours=2)
+    israel_midnight = israel_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    utc_cutoff = israel_midnight - timedelta(hours=2)
+    today_start = utc_cutoff.isoformat()
     
     total_water = Decimal('0')
     total_money = Decimal('0')

@@ -86,7 +86,11 @@ function Dashboard() {
         const dateStr = session.start_time || session.startTime || session.date || '';
         if (!dateStr) return;
 
-        const dateKey = dateStr.split('T')[0]
+        const dateObj = new Date(dateStr)
+        if (isNaN(dateObj.getTime())) return;
+
+        // Use browser's local date for grouping
+        const dateKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`
         if (!dailyMap[dateKey]) {
           dailyMap[dateKey] = { liters: 0, cost: 0 }
         }
