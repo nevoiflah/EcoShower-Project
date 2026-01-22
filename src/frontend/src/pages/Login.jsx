@@ -11,7 +11,7 @@ export default function Login() {
   const { login } = useAuth()
   const { t, isRTL } = useLanguage()
   const navigate = useNavigate()
-  
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -95,6 +95,11 @@ export default function Login() {
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
+            </div>
+            <div className={`mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <Link to="/forgot-password" virtual className="text-blue-600 text-xs font-medium hover:underline">
+                {isRTL ? 'שכחת סיסמה?' : 'Forgot password?'}
+              </Link>
             </div>
           </div>
 

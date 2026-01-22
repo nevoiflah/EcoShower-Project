@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Devices from './pages/Devices'
+import ForgotPassword from './pages/ForgotPassword'
 
 import History from './pages/History'
 import Settings from './pages/Settings'
@@ -154,6 +155,11 @@ function AppRoutes() {
       <Route path="/register" element={
         <AuthRoute>
           <Register />
+        </AuthRoute>
+      } />
+      <Route path="/forgot-password" element={
+        <AuthRoute>
+          <ForgotPassword />
         </AuthRoute>
       } />
 
